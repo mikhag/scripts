@@ -6,12 +6,35 @@
 FILE_FOLDER="/tmp/foobar"
 CHECKSUM_FOLDER="/tmp/checksum/"
 DSTFOLDER="/tmp/foobar2"
+#
+#Which log level to send to screen, and/or to syslog
+#1=alert,2=critical,3=error,
+#4=warning,5=notice,6=info,7=debug
+OUTPUT_LOGLEVEL=5
+SYSLOG_LOGLEVEL=5
+SYSLOG_LOGFACILITY=local3
+#
 
+
+# - log -
+# Receives msg-loglevel and log-message, and print if LOGLEVEL is greater than msg-loglevel
+#   - $1  - Message Log Level
+#   - $2  - Message
 log(){
-    level=$1
+
+    msg_loglevel=$1
     msg=$2
-    echo $2
+
+    #Check if message should be printed on screen
+    if [[  "$OUTPUT_LOGLEVEL" -ge "$msg_loglevel"   ]]; then
+        echo $msg
+    fi
+    #Check if message should be sent to syslog, then do it
+    if [[  "$SYSLOG_LOGLEVEL" -ge "$msg_loglevel"   ]]; then
+        logger -id verifyWsus -p "${SYSLOG_LOGFACILITY}.${msg_loglevel}" "$msg"
+    fi
 }
+
 
 
 cd $FILE_FOLDER
