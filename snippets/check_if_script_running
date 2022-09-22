@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PIDFILE=/tmp/.$(basename $0).pid
+trap "rm $PIDFILE" EXIT
 
 check_pidfile(){
     if [ -e $PIDFILE ] ; then
