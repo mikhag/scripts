@@ -1,0 +1,18 @@
+#!/bin/bash
+
+PIDFILE=/tmp/.$(basename $0).pid
+trap "rm $PIDFILE" EXIT
+
+check_pidfile(){
+    if [ -e $PIDFILE ] ; then
+        ps $(cat $PIDFILE) > /dev/null 2>&1
+        if [ $? == "0" ]; then
+            echo "'$(basename $0)' already running with PID: $(cat $PIDFILE)"
+            exit 1
+        fi
+        echo Pidfile exist but process not running, starting process...
+    fi 
+    echo $$ > $PIDFILE
+}
+
+check_pidfile
