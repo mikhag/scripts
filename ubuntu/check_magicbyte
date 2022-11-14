@@ -1,0 +1,27 @@
+#!/bin/bash
+
+
+check_file(){
+   filename=$(basename $1)
+   mb=$(file -b "$1" | awk -F"," '{print $1}')
+   file_ext=$(grep -E "^$mb:" ./magic_ext | awk -F":" '{print $2}')
+#   echo $file_ext
+
+   IFS="," 
+   read -ra ext <<< "$file_ext"
+   for i in ${ext[@]}; do
+     if echo $filename | grep -E "$i\$" > /dev/null; then
+        return 0
+    fi
+#     echo $i
+   done
+
+      
+}
+
+if check_file $1; then
+    exit 0
+else
+    echo "Wrong file-extension"
+    exit 1
+fi
