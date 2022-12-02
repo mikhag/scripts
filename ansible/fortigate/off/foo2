@@ -1,0 +1,46 @@
+- name: RouterOS test with API
+  hosts: fortigates
+  collections:
+    - fortinet.fortios
+  connection: httpapi
+  vars:
+   vdom: "root"
+   ansible_httpapi_use_ssl: yes
+   ansible_httpapi_validate_certs: no
+   ansible_httpapi_port: 443
+  vars_files:
+    - test.yml
+  tasks:
+    - name: Configure interfaces.
+      fortios_system_interface:
+        state: "present"
+        system_interface:
+          name: "aggr1"
+          vdom: "{{ vdom }}"
+          alias: "aggr1"
+          type: "aggregate" 
+          member:
+            - interface_name: 'lan2'
+            - interface_name: 'lan3'
+          role: lan
+#          lldp-transmission: "enable"
+    - name: Configure vlan16.
+      fortios_system_interface:
+        state: "present"
+        system_interface:
+          name: "vlan_16"
+          alias: "vlan_16"
+          vdom: "{{ vdom }}"
+          interface: "aggr1"
+          role: lan
+          vlanid: 16
+    - name: Configure vlan15 addresses.
+      fortios_firewall_address: 
+        vdom: "{{ vdom }}"
+        state: "present"
+        firewall_address:
+          name: "vlan_16"
+          type: "interface-subnet"
+          interface: "vlan_16" 
+
+      

@@ -1,0 +1,16 @@
+#   # something that applies to all app servers.
+  - name: Print return information from the previous task
+    ansible.builtin.debug:
+      msg: "{{ lookup('file', '../ca.crt') }}"
+
+
+  - name: Import VPN Certificate Local
+    fortios_monitor:
+       vdom: "{{ vdom }}"
+       enable_log: true
+       selector: 'import.vpn-certificate.local'
+       params:
+           type: 'regular'
+           scope: 'global'
+           certname: 'imported.vpn.cert.0'
+           file_content: "{{ lookup('file', '../ca.crt') }}"

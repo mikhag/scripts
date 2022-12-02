@@ -1,0 +1,121 @@
+
+    - name: Print return information from the previous task
+      ansible.builtin.debug:
+        var: ipplan_vlan_interfaces['3500']['mode'] 
+
+
+    - name: fact gathering
+      fortios_configuration_fact:
+        vdom: "{{ vdom }}"
+        selectors:
+          - selector: system_interface
+
+#
+# Physical interfaces
+#
+    - name: Configure physical interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}"
+        system_interface:
+          name: "{{ item['key'] }}"
+          vdom: "{{ item['value']['vdom'] | default('root') }}"
+          alias: "{{ item['value']['alias'] }}"
+          lldp_reception: "{{ item['value']['lldp'] }}"
+          lldp_transmission: "{{ item['value']['lldp'] }}"
+          device_identification: "{{ item['value']['device_identification'] | default('enable') }}"
+          type: "physical"
+          role: "{{ item['value']['role'] }}"
+          mode: "{{ item['value']['mode'] }}"
+          ip: "{{ item['value']['ip'] if item['value']['mode'] == 'static' | default(null) else omit }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] }}"
+          description: "{{ item['value']['description'] }}"
+      loop: "{{ physical_interfaces | dict2items }}"
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ item['value']['vdom'] | default('root') }}"
+        state: "present"
+        firewall_address:
+          name: "{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "{{ item['key'] }}"
+      loop: "{{ physical_interfaces | dict2items }}"
+
+
+#
+#  LAGG-interface
+    - name: Configure LAGG interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}"
+        system_interface:
+          name: "{{ item['key'] }}"
+          vdom: "{{ item['value']['vdom'] | default('root') }}"
+          alias: "{{ item['value']['alias'] }}"
+          device_identification: "{{ item['value']['device_identification'] | default('enable') }}"
+          lldp_reception: "{{ item['value']['lldp'] }}"
+          lldp_transmission: "{{ item['value']['lldp'] }}"
+          type: "aggregate"
+          role: "{{ item['value']['role'] }}"
+          mode: "{{ item['value']['mode'] }}"
+          ip: "{{ item['value']['ip'] if item['value']['mode'] == 'static' | default(null) else omit }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] }}"
+          description: "{{ item['value']['description'] }}"
+          member: "{{ item['value']['member'] }}"
+      loop: "{{ lagg_interfaces | dict2items }}"
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        firewall_address:
+          name: "{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "{{ item['key'] }}"
+      loop: "{{ lagg_interfaces | dict2items }}"
+
+
+#
+#
+#  VLAN-interface
+    - name: Configure VLAN interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}" 
+        system_interface:
+          name: "vlan_{{ item['key'] }}"
+          vdom: "{{ item['value']['vdom'] | default('root') }}"
+          alias: "vlan_{{ item['key'] }}"
+          interface: "{{ item['value']['interface'] }}"
+          device_identification: "{{ item['value']['device_identification'] | default('enable') }}"
+          lldp_reception: "{{ item['value']['lldp'] | default('disable') }}"
+          lldp_transmission: "{{ item['value']['lldp'] | default('disable') }}"
+          type: "vlan"
+          role: "{{ item['value']['role'] | default('lan') }}"
+          mode: "{{ item['value']['mode'] if 'mode' in item['value'].keys() else ipplan_vlan_interfaces[(item['key'] | string)]['mode'] }}"
+          vlanid: "{{ item['key'] }}"
+          ip: "{{ item['value']['ip'] if 'ip' in item['value'].keys() else ipplan_vlan_interfaces[(item['key'] | string)]['ip'] }}"
+#          ip: "{{ item['value']['ip'] | default(omit)  }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] | default('up') }}"
+          description: "{{ item['value']['description'] if 'description' in item['value'].keys() else ipplan_vlan_interfaces[(item['key'] | string)]['description'] }}"
+#          description: "{{ item['value']['description'] | default(omit) }}"
+      loop: "{{ vlan_interfaces | dict2items }}"
+      when:
+        item['value']['interface'] is defined
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ item['value']['vdom'] | default('root') }}"
+        state: "present"
+        firewall_address:
+          name: "vlan_{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "vlan_{{ item['key'] }}"
+      loop: "{{ vlan_interfaces | dict2items }}"
+      when:
+        item['value']['interface'] is defined
+#     ipplan_vlan_interfaces 

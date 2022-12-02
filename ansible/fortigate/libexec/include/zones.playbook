@@ -1,0 +1,13 @@
+
+#Remove DMZ Zone
+  - name: Remove DMZ zone  
+    fortios_system_zone:
+      vdom:  "{{ vdom }}"
+      state: "{{ item['value']['state'] | default('present') }}"
+      system_zone:
+        intrazone: "{{ item['value']['intrazone'] | default('deny') }}"
+        comment: "{{ item['value']['description'] | default(omit) }}"
+        name: "{{ item['key'] }}"
+        interface: "{{ item['value']['interfaces'] | default(omit) }}"
+    loop: "{{ zones | dict2items }}"
+

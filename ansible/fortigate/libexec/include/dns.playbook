@@ -1,0 +1,10 @@
+ - name: Configure DNS.
+   fortios_system_dns:
+     vdom:  "{{ vdom }}"
+     system_dns:
+        domain:
+        -
+           domain: "{{ dns_domain }}"
+        log: "all"
+        primary: "{{ dns[0] }}"
+        secondary: "{{ dns[1] }}"

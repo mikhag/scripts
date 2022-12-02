@@ -1,0 +1,38 @@
+
+
+firewall_policy:
+  "10":
+    name: "blaha"
+    status: enable  # enable (default) / disable / remove
+    action: accept
+    drop: enable
+    comment: "foobar"
+    src_int: "vlan_1066" 
+    dst_int: "vlan_1066"
+    webfilter_profile: "g-default"
+    ips_sensor: "g-default"
+    av_profile: "g-default"
+    src_addr:
+      - "all"
+    dst_addr: 
+      - "all"
+#      - "foo"
+#      - "vlan_62 address"
+    log: "all"
+    applications:
+      - SSH
+      - MS.Windows.Update 
+    services:
+       - SSH
+
+services:
+  "foobar2":
+    tcp_portrange: "100-150"
+
+servicegroup:
+   "test123":
+#      members:
+#        - "foobar2"
+#        - foobar
+      comment: "foobar"
+

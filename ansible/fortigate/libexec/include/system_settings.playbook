@@ -1,0 +1,32 @@
+
+
+#Change Firewall mode
+#Enable / disable GUI-tabs
+  - name: Configure settings attributes.
+    fortios_system_settings:
+      vdom:  "{{ vdom }}"
+      system_settings:
+        ngfw_mode: "policy-based"
+        gui_local_in_policy: enable
+        gui_wireless_controller: disable
+        gui_switch_controller: disable
+        gui_vpn: disable
+        gui_multiple_interface_policy: enable
+        gui_ztna: disable 
+        gui_wan_load_balancing: disable
+        gui_traffic_shaping: disable
+        gui_dynamic_routing: disable
+        
+        
+
+  - name: Configure Overlay Controller VPN settings.
+    fortios_vpn_ocvpn:
+      vdom:  "{{ vdom }}"
+      vpn_ocvpn:
+        status: disable
+
+  - name: Override global FortiCloud logging settings for this VDOM.
+    fortios_log_fortiguard_override_setting:
+      vdom:  "{{ vdom }}"
+      log_fortiguard_override_setting:
+        status: "disable"

@@ -1,0 +1,21 @@
+- name: RouterOS test with API
+  hosts: fortigates
+  collections:
+    - fortinet.fortios
+  connection: httpapi
+  vars:
+   vdom: "root"
+   ansible_httpapi_use_ssl: yes
+   ansible_httpapi_validate_certs: no
+   ansible_httpapi_port: 443
+
+  tasks:
+    - include: include/global_settings.playbook
+    - include: include/dns.playbook
+    - include: include/log.playbook
+    - include: include/vdom.playbook
+    - include: include/interfaces.playbook
+    #- include: include/pki2.playbook
+    - include: include/ntp.playbook
+
+

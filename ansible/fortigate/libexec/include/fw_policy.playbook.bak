@@ -1,0 +1,41 @@
+
+
+
+#- name: fact-app-names
+#  fortios_configuration_fact:
+#   vdom: "{{ vdom }}"
+#   selectors:
+#     - selector: application_name
+#  register: test
+
+#- name: Print return information from the previous task
+#  ansible.builtin.debug:
+#    var: test.meta[0].results | json_query("[?name=='SSH'].id")
+
+
+- name: Configure IPv4/IPv6 policies.
+  fortios_firewall_policy:
+     vdom:  "root"
+     state: "present"
+     firewall_policy:
+       name: "foobar"
+       policyid: 10
+       action: "accept"
+       application:
+         -
+            id:  "10"
+       logtraffic: "all"
+       dstaddr:
+         -
+            name: "foo"
+       dstintf:
+         -
+            name: "PROD-IMPEX1"
+       srcaddr:
+         -
+            name: "vlan_62_address"
+       srcintf:
+         -
+            name: "vlan_62"
+       
+ 

@@ -1,0 +1,72 @@
+#
+# Create addresses
+#
+  - name: Adding address-object from yaml
+    fortios_firewall_address:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_address:
+        name: "{{item['key']}}"
+        subnet: "{{item['value']['ip']}}"
+        associated_interface: "{{item['value']['interface'] | default(omit)}}"
+        comment: "{{item['value']['description'] | default(omit)}}"
+        allow_routing: "{{item['value']['allow_routing'] | default('enable')}}"
+        color: "{{item['value']['color'] | default(omit)}}"
+    loop: "{{ addresses.addresses | dict2items }}"
+
+#
+# Import addresses from ipplan
+#
+  - name: Adding address-object from ip-plan
+    fortios_firewall_address:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_address:
+        name: "{{item}}"
+        subnet: "{{ipplan_hosts[item]['ip']}}"
+        comment: "{{ item }} (Imported from IP-Plan)"
+    loop: "{{ addresses.import }}"
+
+
+#
+#
+# Auto-Import addresses from ipplan
+#
+  - name: Adding address-object from ip-plan
+    fortios_firewall_address:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_address:
+        name: "{{item['key']}}"
+        subnet: "{{item['value']['ip']}}"
+        comment: "{{ item['key']  }} (Imported from IP-Plan)"
+    loop: "{{ ipplan_hosts | dict2items }}"
+    when: 
+       - item['value']['vlan'] | regex_search(addresses.auto_import)
+
+
+#
+# Addressgroup
+#
+  - name: Configure IPv4 address groups.
+    fortios_firewall_addrgrp:
+      vdom:  "{{ vdom }}"
+      state: "present"
+      firewall_addrgrp:
+        allow_routing: "disable"
+        category: "default"
+        comment: "{{item['value']['description'] | default(omit)}}"
+        allow_routing: "{{item['value']['allow_routing'] | default('disable')}}"
+        color: "{{item['value']['color'] | default(omit)}}"
+        member: |
+            {% set mbr = [] %}
+            {% if("members" in item['value'].keys() and item['value']['members']) %}
+            {% for i in (item['value']['members'] | list) %}
+            {% set _ = mbr.append({"name": i}) %}
+            {% endfor %}
+            {% endif %}
+            {{ mbr | list  }}
+        name: "{{item['key']}}"
+    loop: "{{ addresses.address_groups | dict2items }}"
+
+

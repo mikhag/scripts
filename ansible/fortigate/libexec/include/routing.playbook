@@ -1,0 +1,25 @@
+
+    - name: fact gathering
+      fortios_configuration_fact:
+        vdom: "{{ vdom  }}"
+        selectors:
+          - selector: system_interface
+
+#
+# static routes
+#
+    - name: Configure route
+      fortios_router_static:
+        state: "present"
+        vdom: "{{ vdom  }}"
+        router_static:
+          dst: "{{ item['value']['address'] }}"
+          blackhole: "{{ item['value']['blackhole'] | default('disable') }}" 
+          device: "{{ item['value']['interface'] | default(omit) }}"
+          gateway: "{{ item['value']['gateway'] | default(omit) }}"
+          distance: "{{ item['value']['metric'] | default(50) }}"
+          status: "{{ item['value']['status'] | default(omit) }}"
+          comment: "{{ item['value']['description'] | default(omit) }}"
+          seq_num: "{{ item['key'] }}"
+      loop: "{{ routing['static'] | dict2items }}"
+

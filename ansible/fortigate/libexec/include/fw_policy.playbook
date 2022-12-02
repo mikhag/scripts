@@ -1,0 +1,109 @@
+
+- name: fact-app-names
+  fortios_configuration_fact:
+   vdom: "{{ vdom }}"
+   selectors:
+     - selector: application_name
+  register: fact_apps
+
+
+- name: 'Map Application-Name -> ID'
+  set_fact:
+    es_vhost: |
+      {% set services = {} %}
+      {%    for i in fact_apps.meta[0].results %}
+      {%    set _ = services.update({i['name']:i['id']}) %}
+      {%    endfor %}
+      {{ services |to_json |  from_json }}
+    register: es_vhost
+
+
+- name: Configure firewall application groups.
+  fortios_application_group:
+    state: present
+    vdom: "{{ vdom }}"  
+    application_group:
+      application: |
+            {% set apps = [] %}
+            {% if("applications" in item['value'].keys() and item['value']['applications']) %}
+            {% for i in (item['value']['applications'] | list) %}
+            {% set _ = apps.append({"id": es_vhost[i]}) %}
+            {% endfor %}
+            {% endif %}
+            {{ apps | list  }}
+      comment: " {{ item['value']['comment'] | default(omit) }} "
+      name: "{{ item['key'] }}"
+  loop: "{{ application['groups'] | dict2items }}"
+
+
+
+#   # something that applies to all app servers.
+#- name: Print return information from the previous task
+#  ansible.builtin.debug:
+#    var: firewall_policy['2']['applications']
+
+- name: Create first policy
+  fortios_firewall_security_policy:
+        state: "{{ 'absent' if item['value']['status'] == 'remove' else 'present' }}"
+        vdom: "{{ vdom }}"
+        firewall_security_policy:
+          policyid: "{{ item['key'] }}"
+          name: "{{ item['value']['name'] }}"
+          action: "{{ item['value']['action'] | default('accept') }}"
+          send_deny_packet: "{{ item['value']['drop'] | default('disable') }}"
+          srcintf:
+            - name: "{{ item['value']['src_int'] | mandatory }}"
+          dstintf:
+            - name: "{{ item['value']['dst_int'] | mandatory }}"
+          srcaddr: |
+            {% set srca = [] %}
+            {% if("src_addr" in item['value'].keys() and item['value']['src_addr']) %}
+            {% for i in (item['value']['src_addr'] | list) %}
+            {% set _ = srca.append({"name": i}) %}
+            {% endfor %}
+            {% endif %}
+            {{ srca | list  }}
+          dstaddr: |
+            {% set dsta = [] %}
+            {% if("dst_addr" in item['value'].keys() and item['value']['dst_addr']) %}
+            {% for i in (item['value']['dst_addr'] | list) %}
+            {% set _ = dsta.append({"name": i}) %}
+            {% endfor %}
+            {% endif %}
+            {{ dsta | list  }}
+          application: |
+            {% set apps = [] %}
+            {% if("applications" in item['value'].keys() and item['value']['applications']) %}
+            {% for i in (item['value']['applications'] | list) %}
+            {% set _ = apps.append({"id": es_vhost[i]}) %}
+            {% endfor %}
+            {% endif %}
+            {{ apps | list  }}
+          app_group: |
+            {% set appg = [] %}
+            {% if("app_group" in item['value'].keys()) %}
+            {% for i in (item['value']['app_group']) %}
+            {% set _ = appg.append({"name": i}) %}
+            {% endfor %}
+            {{ appg | list  }}
+            {% else %}
+            {{ [] }}
+            {% endif %}
+          enforce_default_app_port: "{{ 'disable' if 'services' in item['value'].keys() else 'enable' }}"
+          service: |
+            {% set svc = [] %}
+            {% if("services" in item['value'].keys() and item['value']['services']) %}
+            {% for i in (item['value']['services'] | list) %}
+            {% set _ = svc.append({"name": i}) %}
+            {% endfor %}
+            {% endif %}
+            {{ svc | list  }}
+          schedule: "always"
+          logtraffic: "{{ item['value']['log'] | default('all') }}"
+          ips_sensor: "{{ item['value']['ips_sensor'] | default(omit) }}"
+          av_profile: "{{ item['value']['av_profile'] | default(omit) }}"
+          webfilter_profile: "{{ item['value']['webfilter_profile'] | default(omit) }}"
+          comments: "{{ item['value']['comment'] | default(omit) }}"
+          status: "{{ 'disable' if item['value']['status'] == 'disable' else 'enable' }}"
+          logtraffic_start: "disable" 
+  loop: "{{ firewall_policy | dict2items }}"

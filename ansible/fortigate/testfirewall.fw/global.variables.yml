@@ -1,0 +1,49 @@
+hostname: testfirewall
+admin_timeout: 5
+pre_login_banner: disable
+post_login_banner: disable
+dns:
+  - 8.8.8.8
+  - 8.8.4.4
+dns_domain: "test.com"
+
+auto_backup:
+  on_update: enable
+  on_logout: enable
+
+password_policy:
+   status: disable
+   expire: disable
+   expire_days: 30
+   reuse_password: enable
+   min_length: 15
+   min_change_characters: 4
+   min_lowercase_characters: 1
+   min_uppercase_characters: 1
+   min_non_alpha_characters: 1
+   min_numeric_characters: 1 
+
+syslog:
+   facility: local4
+   format: rfc5424
+   interface: vlan_62
+   mode: udp
+   port: 514
+   server: 10.10.10.10
+   syslog_type: 21
+   
+
+vdoms:
+  - root
+  - test22
+  - IMPEX
+  - PROD
+
+ntp:
+  status: enable
+  server: enable
+  sync_interval: 10    
+#  sync_servers:
+#    - {"server": "10.10.10.10", "ntpv3": disable }
+#  server_interfaces:
+#    - {"interface_name": "vlan_10"}

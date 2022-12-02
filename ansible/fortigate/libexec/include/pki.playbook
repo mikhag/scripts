@@ -1,0 +1,11 @@
+#
+# Create addresses
+#
+  - name: Adding address-object for physical interfaces.
+    fortios_vpn_certificate_ca: 
+      enable_log: yes
+      vdom: "{{ vdom }}"
+      state: "present"
+      vpn_certificate_ca:
+        name: "test"
+        ca: "{{ cert_string }}"

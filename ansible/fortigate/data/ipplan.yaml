@@ -1,0 +1,43 @@
+ipplan_hosts:
+  ESOS-AC-T-FW01:
+    ip: 10.0.0.2/32
+    vlan: '1064'
+  ESOS-AC-T-FW02:
+    ip: 10.0.0.6/32
+    vlan: '1065'
+  ESOS-AC-T-FW03:
+    ip: 10.0.0.10/32
+    vlan: '1066'
+  ESOS-AC-T-FW04:
+    ip: 10.0.0.14/32
+    vlan: '1067'
+  LAB-T-CA01:
+    ip: 10.50.0.2/32
+    vlan: '3500'
+  LAB-T-CA02:
+    ip: 10.50.0.3/32
+    vlan: '3500'
+  LAB-T-CA03:
+    ip: 10.50.0.4/32
+    vlan: '3500'
+ipplan_vlan_interfaces:
+  '1064':
+    description: ESOS-AC-T-FW01
+    ip: 10.0.0.1/30
+    mode: static
+  '1065':
+    description: ESOS-AC-T-FW02
+    ip: 10.0.0.5/30
+    mode: static
+  '1066':
+    description: ESOS-AC-T-FW03
+    ip: 10.0.0.9/30
+    mode: static
+  '1067':
+    description: ESOS-AC-T-FW04
+    ip: 10.0.0.132/30
+    mode: static
+  '3500':
+    description: LAB-T-CA01
+    ip: 10.50.0.1/28
+    mode: static

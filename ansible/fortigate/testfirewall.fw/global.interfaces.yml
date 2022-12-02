@@ -1,0 +1,64 @@
+lagg_interfaces:
+  aggr2:        
+    alias: "aggr2"     
+    ip: "172.0.2.1/24"    # ip including netmask X.X.X/XX
+    role: lan             # wan/lan/dmz           
+    lldp: disable         # enable/disable
+    mode: static          # static/dhcp
+    description: "WAN interface"                                                                                                                                                                                                              
+    status: "up"         # up/down
+    member: [interface_name: 'lan2', interface_name: 'lan3']
+    allowaccess: ['ping','ssh'] #Which protocol to allow
+
+physical_interfaces:
+  wan:                    #must match fw interface
+    alias: "WAN"
+    ip: "172.0.0.1/24"    # ip including netmask X.X.X/XX
+    role: wan             # wan/lan/dmz
+    zone: Server
+    lldp: disable         # enable/disable
+    mode: static          # static/dhcp
+    description: "WAN interface"
+    status: "up"         # up/down
+
+#vlan interfaces, name of the interface will be vlan_10
+vlan_interfaces:
+  10:
+    ip: "172.0.10.1/30"    # ip including netmask X.X.X/XX
+    role: lan             # wan/lan/dmz
+    lldp: disable         # enable/disable
+    mode: static          # static/dhcp
+    description: "WAN interface"
+    status: "up"         # up/down
+    zone: internal
+    interface: aggr2
+  11:
+    vdom: test22
+    ip: "172.0.10.1/30"    # ip including netmask X.X.X/XX
+    role: lan             # wan/lan/dmz
+    lldp: disable         # enable/disable
+    mode: static          # static/dhcp
+    description: "WAN interface"
+    status: "up"         # up/down
+    interface: aggr2
+  12:
+    vdom: test22
+    ip: "172.0.10.1/30"    # ip including netmask X.X.X/XX
+    role: lan             # wan/lan/dmz
+    lldp: disable         # enable/disable
+    mode: static          # static/dhcp
+    description: "WAN interface"
+    status: "up"         # up/down
+    zone: internal
+  3500:
+    vdom: test22
+    interface: aggr2
+  1064:
+    vdom: test22
+    interface: aggr2
+  1065:
+    vdom: IMPEX
+    interface: aggr2
+  1066:
+    vdom: PROD
+    interface: aggr2

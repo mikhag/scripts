@@ -1,0 +1,7 @@
+  - name: Configure virtual domain.
+    fortios_system_vdom:
+      vdom:  "{{ vdom }}"
+      state: "present"
+      system_vdom:
+        name: "{{item}}"
+    loop: "{{ vdoms }}"

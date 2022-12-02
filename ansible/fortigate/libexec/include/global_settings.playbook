@@ -1,0 +1,130 @@
+#Configure admin-timeout
+#Configure Hostname
+#Configure Crypto
+#Configure Timezone
+#Configure admin-lockout
+#Show certificates
+#Enable autobackup to revisions
+#Disable all cloud
+  - name: Configure global attributes.
+    fortios_system_global:
+      vdom:  "{{ vdom }}"
+      system_global:
+        admintimeout: "{{ admin_timeout }}"
+        hostname: "{{ hostname }}"
+        ssl_static_key_ciphers: "disable"
+        strong_crypto: "enable"
+        timezone: "26"
+        admin_lockout_threshold: 10
+        admin_lockout_duration: 2147483647
+        gui_certificates: enable
+        revision_image_auto_backup: "{{ auto_backup['on_update'] }}"
+        revision_backup_on_logout: "{{ auto_backup['on_logout'] }}"
+        endpoint_control_fds_access: disable
+        fds_statistics: disable
+        security_rating_result_submission: disable
+        cloud_communication: disable
+        fgd_alert_subscription: []
+        pre_login_banner: "{{ pre_login_banner | default(omit) }}"
+        post_login_banner: "{{ post_login_banner | default(omit) }}"
+        gui_forticare_registration_setup_warning: disable
+        vdom_mode: multi-vdom
+
+
+  - name: Configure central management.
+    fortios_system_central_management:
+      vdom:  "{{ vdom }}"
+      system_central_management:
+        include_default_servers: "disable"
+        type: "none"
+
+  - name: Configure FortiGuard services.
+    fortios_system_fortiguard:
+      vdom:  "{{ vdom }}"
+      system_fortiguard:
+        auto_join_forticloud: disable
+        service_account_id: ""
+        sandbox_region: ""
+        antispam_force_off: enable
+        outbreak_prevention_force_off: enable
+        webfilter_force_off: enable
+
+  - name: Configure the email server used by the FortiGate various things. For example, for sending email messages to users to support user authentication
+     features.
+    fortios_system_email_server:
+      vdom:  "{{ vdom }}"
+      system_email_server:
+        server: ""
+
+#  - name: Configure push updates.
+#    fortios_system_autoupdate_push_update:
+#      vdom:  "{{ vdom }}"
+#      system_autoupdate_push_update: 
+#        status: disable
+
+  - name: Configure update schedule.
+    fortios_system_autoupdate_schedule:
+      vdom:  "{{ vdom }}"
+      system_autoupdate_schedule:
+        status: "disable"
+
+  - name: Configure update tunneling.
+    fortios_system_autoupdate_tunneling:
+      vdom:  "{{ vdom }}"
+      system_autoupdate_tunneling:
+        status: "disable"
+
+  - name: Configure logging to FortiCloud.
+    fortios_log_fortiguard_setting:
+      vdom:  "{{ vdom }}"
+      log_fortiguard_setting:
+        status: disable
+
+#Disable USB-autoinstall
+  - name: Disable USB auto installation.
+    fortios_system_auto_install:
+      vdom:  "{{ vdom }}"
+      system_auto_install:
+        auto_install_config: "disable"
+        auto_install_image: "disable"
+
+#Configure Password-policy
+  - name: Configure password policy
+    fortios_system_password_policy:
+      vdom:  "{{ vdom }}"
+      system_password_policy:
+        apply_to: "admin-password"
+        expire_day: "{{ password_policy['expire_days'] }}"
+        expire_status: "{{ password_policy['expire'] }}"
+        min_change_characters: "{{ password_policy['min_change_characters'] }}"
+        min_lower_case_letter: "{{ password_policy['min_lowercase_characters'] }}"
+        min_non_alphanumeric: "{{ password_policy['min_non_alpha_characters'] }}"
+        min_number: "{{ password_policy['min_numeric_characters'] }}"
+        min_upper_case_letter: "{{ password_policy['min_uppercase_characters'] }}"
+        minimum_length: "{{ password_policy['min_length'] }}"
+        reuse_password: "{{ password_policy['reuse_password'] }}"
+        status: "{{ password_policy['status'] }}"
+
+#Disable SNMP
+  - name:  Disable SNMP
+    fortios_system_snmp_sysinfo:
+      vdom:  "{{ vdom }}"
+      system_snmp_sysinfo:
+        status: "disable"
+
+#Syslog
+  - name: Global settings for remote syslog server.
+    fortios_log_syslogd_setting:
+      vdom:  "{{ vdom }}"
+      log_syslogd_setting:
+        facility: "{{ syslog['facility'] | default('local4') }}"
+        format: "{{ syslog['format'] | default('rfc5424') }}"
+        interface: "{{ syslog['interface'] | default(omit) }}"
+        max_log_rate: "0"
+        mode: "{{ syslog['mode'] | default('udp') }}"
+        port: "{{ syslog['port'] | default(omit) }}"
+        priority: "default"
+        server: "{{ syslog['server'] | default(omit) }}"
+        source_ip: "{{ syslog['source_ip'] | default(omit) }}"
+        status: "{{ syslog['status'] | default('enable') }}"
+        syslog_type: "{{ syslog['syslog_type'] | default('21') }}"

@@ -1,0 +1,41 @@
+zones:
+  DMZ:
+    state: absent
+  Client:
+     state: absent
+#    interfaces:
+#      - {"interface_name": "vlan_62"}
+#  Server:
+#    interfaces:
+#      - {"interface_name": "PROD-IMPEX1"}
+  
+  
+addresses:
+  auto_import: ^2[0-9][0-9][0-9]$
+  import:
+    - ESOS-AC-T-FW01
+  addresses:
+    UAG2:
+       interface: vlan_1066
+       ip: 10.10.0.0/24
+       color: 14
+  address_groups:
+    foobar:
+       members: 
+         - "UAG2"
+#         - foo
+       description: foobar
+       color: 13
+
+routing:
+  static:
+    "1":
+      address: "10.0.0.10/24"
+      gateway: 10.10.10.10
+      interface: "vlan_1066" 
+      metric: 15
+      status: enable
+      description: "test"
+    "2":
+      address: "0.0.0.0/0"
+      blackhole: enable

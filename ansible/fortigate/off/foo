@@ -1,0 +1,78 @@
+- hosts: fortigates
+  collections:
+    - fortinet.fortios
+  connection: httpapi
+  vars:
+    vdom: "root"
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 443  
+    dns_primary: 8.8.8.8
+    dns_secondary: 8.8.4.4
+    #ntp_server = 
+
+    #Admin accounts config
+    admin_timeout = 5
+    admin_password_policy_expire = "enable"
+    admin_password_policy_expire_day = 365
+    admin_password_minimum_length = 30
+
+  tasks:
+  - name: Configure global attributes.
+    fortios_system_global:
+      vdom:  "{{ vdom }}"
+      system_global:
+        admintimeout: "{{ admin_timeout }}"
+        hostname: "{{ inventory_hostname }}"
+        ssl_static_key_ciphers: "disable"
+        strong_crypto: "enable"
+  - name: Configure TimeZone
+    fortios_system_global:
+      vdom: "{{ vdom }}"
+      system_global:
+        timezone: "26"
+  - name: Configure DNS.
+    fortios_system_dns:
+      vdom:  "{{ vdom }}"
+      system_dns:
+        primary: "{{dns_primary}}"
+        secondary: "{{dns_secondary}}"
+  - name: Remove DMZ zone  
+    fortios_system_zone:
+      vdom:  "{{ vdom }}"
+      state: "absent"
+      system_zone:
+        description: ""
+        name: "DMZ"
+  - name: Disable USB auto installation.
+    fortios_system_auto_install:
+      vdom:  "{{ vdom }}"
+      system_auto_install:
+        auto_install_config: "disable"
+        auto_install_image: "disable"
+  - name: Configure password policy
+    fortios_system_password_policy:
+      vdom:  "{{ vdom }}"
+      system_password_policy:
+        apply_to: "admin-password"
+        expire_day: {{ admin_password_policy_expire_day }}
+        expire_status: "{{ admin_password_policy_expire }}"
+        min_change_characters: "2"
+        min_lower_case_letter: "1"
+        min_non_alphanumeric: "1"
+        min_number: "1"
+        min_upper_case_letter: "1"
+        minimum_length: "{{ admin_password_minimum_length }}"
+        reuse_password: "enable"
+        status: "enable"
+  - name:  Admin Lockout-policy
+    fortios_system_global:
+      vdom:  "{{ vdom }}"
+      system_global:
+        admin_lockout_threshold: 10
+        admin_lockout_duration: 2147483647
+  - name:  Disable SNMP
+    fortios_system_snmp_sysinfo:
+      vdom:  "{{ vdom }}"
+      system_snmp_sysinfo:
+        status: "disable"

@@ -1,0 +1,13 @@
+
+# Configure NTP
+  - name:   NTP config
+    fortios_system_ntp:
+      vdom:  "{{ vdom }}"
+      system_ntp:
+        type: "custom"
+        ntpsync: "{{ ntp['status'] | default('disable')  }}"
+        server_mode: "{{ ntp['server'] | default('disable')  }}"
+        syncinterval: "{{ ntp['sync_interval'] | default('10')  }}"
+        interface: "{{ ntp['server_interfaces'] | default(omit)  }}"
+        ntpserver: "{{ ntp['sync_servers'] | default(omit)  }}"
+

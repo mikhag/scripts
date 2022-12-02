@@ -1,0 +1,21 @@
+#
+# Create addresses
+#
+
+    - name: Import certificate
+      ansible.builtin.uri:
+        url: https://{{ ansible_host }}:{{ ansible_httpapi_port }}/api/v2/monitor/vpn-certificate/ca/import
+        validate_certs: false
+        timeout: 300
+        method: POST
+        body_format: json
+        body:
+          scope: global
+          import_method: file
+          file_content: "{{ cert_string }}"
+        # accepting 500 due to duplicate possibility but
+        # ideally I should handle the error
+        # and if 500 validate if the cert already exist
+        status_code: [200, 500]
+        headers:
+          Authorization: "Bearer {{ fortios_access_token }}"

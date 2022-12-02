@@ -1,0 +1,28 @@
+#    - name: Create and Add items to dictionary
+#      set_fact: 
+#          userdata: "{{ userdata | default([]) + [{ 'Name' : item.Name, 'Email' : item.Email, 'Location' : item.Location }] }}"
+#      with_items:
+#        - { 'Name': 'Sarav' , 'Email': 'sarav@gritfy.com', 'Location': 'Chennai'}
+#        - { 'Name': 'Richa' , 'Email': 'richa@gritfy.com', 'Location': 'Chennai'}
+#        - { 'Name': 'Hanu' , 'Email': 'hanu@gritfy.com', 'Location': 'Hyderabad'}
+#             #item['value']['zone'] | default('undefined'):  zone_int[item['value']['zone'] | default('undefined')] | default(zone_int[item['value']['zone'] | default('undefined')][])  + [item['key']]
+#
+#    -  name: Display the Dictionary
+#       debug: var=userdata
+#    - name: Create allnd Add items to dictionary
+#      set_fact: 
+#        zone_int: "{{
+#          {
+#            item['value']['zone'] | default(omit): zone_int[item['value']['zone'] | default('undefined')] | default() + [item['key']]
+#          }
+#        }}"
+#      loop: "{{ lagg_interfaces | combine(vlan_interfaces, physical_interfaces, recursive=False) | dict2items  }}"
+
+
+    -  name: Display the Dictionary
+       debug: 
+         #var:  lagg_interfaces | json_query("lagg_interfaces.[*][0][?alias=='aggr2'].alias")
+         #var:  lagg_interfaces | json_query("[0]*[?alias=='aggr2']")
+         var:  lagg_interfaces + vlan_interfaces + physical_interfaces |  json_query("[?zone=='Server']")
+
+

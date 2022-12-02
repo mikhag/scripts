@@ -1,0 +1,120 @@
+- name: RouterOS test with API
+  hosts: fortigates
+  collections:
+    - fortinet.fortios
+  connection: httpapi
+  vars:
+   vdom: "root"
+   ansible_httpapi_use_ssl: yes
+   ansible_httpapi_validate_certs: no
+   ansible_httpapi_port: 443
+  vars_files:
+    - test.yml
+  tasks:
+
+    - name: fact gathering
+      fortios_configuration_fact:
+        vdom: "root"
+        selectors:
+          - selector: system_interface
+
+#
+# Physical interfaces
+#
+    - name: Configure physical interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}"
+        system_interface:
+          name: "{{ item['key'] }}"
+          vdom: "{{ vdom  }}"
+          alias: "{{ item['value']['alias'] }}"
+          lldp_reception: "{{ item['value']['lldp'] }}"
+          lldp_transmission: "{{ item['value']['lldp'] }}"
+          type: "physical"
+          role: "{{ item['value']['role'] }}"
+          mode: "{{ item['value']['mode'] }}"
+          ip: "{{ item['value']['ip'] if item['value']['mode'] == 'static' | default(null) else omit }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] }}"
+          description: "{{ item['value']['description'] }}"
+      loop: "{{ physical_interfaces | dict2items }}"
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        firewall_address:
+          name: "{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "{{ item['key'] }}"
+      loop: "{{ physical_interfaces | dict2items }}"
+
+
+#
+#  LAGG-interface
+    - name: Configure LAGG interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}"
+        system_interface:
+          name: "{{ item['key'] }}"
+          vdom: "{{ vdom  }}"
+          alias: "{{ item['value']['alias'] }}"
+          lldp_reception: "{{ item['value']['lldp'] }}"
+          lldp_transmission: "{{ item['value']['lldp'] }}"
+          type: "aggregate"
+          role: "{{ item['value']['role'] }}"
+          mode: "{{ item['value']['mode'] }}"
+          ip: "{{ item['value']['ip'] if item['value']['mode'] == 'static' | default(null) else omit }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] }}"
+          description: "{{ item['value']['description'] }}"
+          member: "{{ item['value']['member'] }}"
+      loop: "{{ lagg_interfaces | dict2items }}"
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        firewall_address:
+          name: "{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "{{ item['key'] }}"
+      loop: "{{ lagg_interfaces | dict2items }}"
+
+
+#
+#
+#  VLAN-interface
+    - name: Configure VLAN interfaces.
+      fortios_system_interface:
+        state: "present"
+        vdom: "{{ vdom }}"
+        system_interface:
+          name: "vlan_{{ item['key'] }}"
+          vdom: "{{ vdom }}"
+          alias: "vlan_{{ item['key'] }}"
+          interface: "{{ item['value']['interface'] }}"
+          lldp_reception: "{{ item['value']['lldp'] }}"
+          lldp_transmission: "{{ item['value']['lldp'] }}"
+          type: "vlan"
+          role: "{{ item['value']['role'] }}"
+          mode: "{{ item['value']['mode'] }}"
+          vlanid: "{{ item['key'] }}"
+          ip: "{{ item['value']['ip'] if item['value']['mode'] == 'static' | default(null) else omit }}"
+          allowaccess: "{{ item['value']['allowaccess'] | default([])}}"
+          status: "{{ item['value']['status'] }}"
+          description: "{{ item['value']['description'] }}"
+      loop: "{{ vlan_interfaces | dict2items }}"
+       
+    - name: Adding address-object for physical interfaces.
+      fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        state: "present"
+        firewall_address:
+          name: "vlan_{{item['key']}}-addresses"
+          type: "interface-subnet"
+          interface: "vlan_{{ item['key'] }}"
+      loop: "{{ vlan_interfaces | dict2items }}"
+#      
