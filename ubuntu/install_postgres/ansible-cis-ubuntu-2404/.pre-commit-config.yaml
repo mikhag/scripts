@@ -1,0 +1,70 @@
+---
+# Pre-commit configuration
+# For details, visit: https://pre-commit.com/hooks.html
+
+ci:
+  autofix_prs: false
+
+repos:
+  # Codespell for spelling corrections
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.0
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=ihs,ro,fo,iif,chage
+          - --skip="./.*,*.csv,*.json"
+          - --quiet-level=2
+        exclude_types:
+          - csv
+          - json
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: check-json
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # Secret detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - --exclude-files=templates/pam/pwquality
+          - --exclude-files=templates/pam/pwhistory.j2
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.2
+    hooks:
+      - id: gitleaks
+
+  # YAML Linting
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+
+  # Ansible linting ############################################################
+  - repo: https://github.com/ansible-community/ansible-lint
+    rev: v25.1.0
+    hooks:
+      - id: ansible-lint
+        name: Ansible-lint
+        entry: python3 -m ansiblelint -v --force-color -c .ansible-lint
+        language: python
+        pass_filenames: false
+        always_run: true
+        additional_dependencies:
+          - ansible-core>=2.16.5
