@@ -42,15 +42,16 @@ fi
 apt update && apt install -y postgresql-${PG_VERSION} etcd patroni haproxy pgbouncer jq
 
 # Configure etcd
-cat <<EOF > /etc/default/etcd
-ETCD_NAME="etcd-${NODE_IP}"
-ETCD_DATA_DIR="/var/lib/etcd"
-ETCD_LISTEN_PEER_URLS="http://${NODE_IP}:2380"
-ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
-ETCD_INITIAL_CLUSTER="etcd1=http://${NODE_IP}:2380,etcd2=http://${PEER_IP}:2380"
-ETCD_INITIAL_CLUSTER_STATE="new"
-ETCD_INITIAL_CLUSTER_TOKEN="pg-cluster"
-ETCD_ADVERTISE_CLIENT_URLS="http://${NODE_IP}:2379"
+mkdir -p /etc/etcd
+cat <<EOF > /etc/etcd/etcd.conf.yaml
+initial-cluster-token: PostgreSQL_HA_Cluster_1
+initial-cluster-state: new
+initial-cluster: node1=http://${NODE_IP}:2380,node2=http://${PEER_IP}:2380
+data-dir: /var/lib/etcd
+initial-advertise-peer-urls: http://${NODE_IP}:2380 
+listen-peer-urls: http://${NODE_IP}:2380
+advertise-client-urls: http://${NODE_IP}:2379
+listen-client-urls: http://${NODE_IP}:2379
 EOF
 
 systemctl enable --now etcd
