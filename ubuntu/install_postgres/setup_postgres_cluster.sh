@@ -44,7 +44,7 @@ if [[ "$ROLE" != "primary" && "$ROLE" != "replica" ]]; then
 fi
 
 # Install required packages
-apt update && apt install -y postgresql-${PG_VERSION} etcd-server etcd-client patroni haproxy pgbouncer jq
+apt update && apt install -y postgresql-${PG_VERSION} etcd-server etcd-client patroni haproxy  jq
 
 
 # Configure etcd
@@ -71,6 +71,18 @@ sudo -u postgres psql  -c "ALTER USER postgres WITH PASSWORD '${POSTGRES_POSTGRE
 
 #Disable postgres, let Patroni handle this
 sudo systemctl disable postgresql
+
+
+#Firewall
+ufw default deny incoming
+ufw allow from ${PEER_IP} proto tcp to any port 2380
+ufw allow from ${PEER_IP} proto tcp to any port 2379
+ufw allow from ${PEER_IP} proto tcp to any port 5442
+ufw allow from ${PEER_IP} proto tcp to any port 8008
+ufw allow  5432/tcp
+ufw allow  5433/tcp
+ufw allow  8404/tcp
+ufw enable
 
 # Configure Patroni
 cat <<EOF > $PATRONI_CONFIG
@@ -184,28 +196,19 @@ backend postgresql_replicas
     http-check expect status 200
     server pg_node1 ${NODE_IP}:5442 check port 8008 rise 2 fall 3
     server pg_node2 ${PEER_IP}:5442 check port 8008 rise 2 fall 3
+
+frontend stats
+    bind *:8404
+    mode http
+    stats enable
+    stats refresh 30s
+    stats uri /
+    stats refresh 10s
+    stats auth tekniska:dsacEWCewcwe322c%we
 EOF
 
 systemctl restart haproxy
 systemctl enable haproxy
-
-# Configure PgBouncer
-cat <<EOF > /etc/pgbouncer/pgbouncer.ini
-[databases]
-postgres = host=localhost port=5442 dbname=postgres
-
-[pgbouncer]
-listen_addr = 0.0.0.0
-listen_port = 6432
-auth_type = md5
-auth_file = /etc/pgbouncer/userlist.txt
-admin_users = postgres
-pool_mode = transaction
-EOF
-
-echo "\"postgres\" \"${POSTGRES_POSTGRES_PASSWORD}\"" > /etc/pgbouncer/userlist.txt
-systemctl restart pgbouncer
-systemctl enable pgbouncer
 
 
 
@@ -220,39 +223,38 @@ cat <<EOF > /tekniska/bin/pg_backup.sh
 PG_PORT=5442
 PG_USER="postgres"
 BACKUP_DIR="/tekniska/backup/postgres"
-DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+DATE=\$(date +"%Y-%m-%d_%H-%M-%S")
 
 # Create directories if they don't exist
-mkdir -p "$BACKUP_DIR/hourly" "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly"
+mkdir -p "\$BACKUP_DIR/hourly" "\$BACKUP_DIR/daily" "\$BACKUP_DIR/weekly"
 
 # Dump all databases
-pg_dumpall -U "$PG_USER" -p "${PG_PORT}" | gzip > "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz"
+pg_dumpall -U "\$PG_USER" -p "\${PG_PORT}" | gzip > "\$BACKUP_DIR/hourly/postgres_backup_\$DATE.sql.gz"
 
 # Rotate Backups
-find "$BACKUP_DIR/hourly" -type f -mtime +1 -delete  # Keep last 24 hours
-find "$BACKUP_DIR/daily" -type f -mtime +7 -delete   # Keep last 7 days
-find "$BACKUP_DIR/weekly" -type f -mtime +28 -delete # Keep last 4 weeks
+find "\$BACKUP_DIR/hourly" -type f -mtime +1 -delete  # Keep last 24 hours
+find "\$BACKUP_DIR/daily" -type f -mtime +7 -delete   # Keep last 7 days
+find "\$BACKUP_DIR/weekly" -type f -mtime +28 -delete # Keep last 4 weeks
 
 # Move to daily if it's midnight
-if [ "$(date +%H)" -eq "00" ]; then
-    cp "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz" "$BACKUP_DIR/daily/"
+if [ "\$(date +%H)" -eq "00" ]; then
+    cp "\$BACKUP_DIR/hourly/postgres_backup_\$DATE.sql.gz" "\$BACKUP_DIR/daily/"
 fi
 
 # Move to weekly if it's Sunday at midnight
-if [ "$(date +%u)" -eq "7" ] && [ "$(date +%H)" -eq "00" ]; then
-    cp "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz" "$BACKUP_DIR/weekly/"
+if [ "\$(date +%u)" -eq "7" ] && [ "\$(date +%H)" -eq "00" ]; then
+    cp "\$BACKUP_DIR/hourly/postgres_backup_\$DATE.sql.gz" "\$BACKUP_DIR/weekly/"
 fi
 
 EOF
 
-chmod 711 /tekniska/bin/pg_backup.sh
+chmod 555 /tekniska/bin/pg_backup.sh
 mkdir -p /tekniska/backup/postgres
 chown postgres:postgres /tekniska/backup/postgres
 chmod 770 /tekniska/backup/postgres
 
 cat <<EOF > /etc/cron.d/pgbackup
 
-# Activity reports every 10 minutes everyday
 0 * * * * postgres /tekniska/bin/pg_backup.sh
 
 EOF
