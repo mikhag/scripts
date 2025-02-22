@@ -52,12 +52,19 @@ https://github.com/MVladislav/ansible-cis-ubuntu-2404
 ```
 - An external loadbalancer is used to receive the requests and forward it to one of the available nodes in the cluster. 
 
+**HAProxy**
+
 - On each node of the cluster an HA-Proxy is installed, this monitors which server that is the master and forwards all operations to it. A readonly port is available aswell, that do not require operations on the master.
 
+**ETCD**
+
+**Patroni**
 - A postgres is installed with Patroni. Patroni monitors and automaticlly switch the master and replica if the master becomes unavailable.
 
 
+**pgbounder**
 
+**postgres**
 
 ```
 ansible-playbook -e ansible_user=root ./cis-playbook.yml
@@ -70,3 +77,13 @@ ansible-playbook -e ansible_user=root ./cis-playbook.yml
 ```
 ./setup_patroni_cluster.sh --node-ip 192.168.1.20 --peer-ip 192.168.1.10 --role replica
 ```
+
+PORTS
+2379 - etcd status
+2380 - etcd communication
+5442 - Postgressql
+5432 - HAproxy postgres-proxy RW
+5433 - HAproxy postgres-proxy RO
+6432 - pgbouncer
+8008 - Patroni cluster status
+8404 - HAproxy statusweb
