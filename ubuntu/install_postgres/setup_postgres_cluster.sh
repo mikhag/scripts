@@ -13,7 +13,7 @@ usage() {
     echo "Usage: $0 --node-ip <NODE_IP> --peer-ip <PEER_IP> --role <primary|replica>"
     echo "       $0 --help"
     echo ""
-    echo "Example for primary: $0 --peer-name node1 --node-ip 192.168.1.10 --peer-name node2 --peer-ip 192.168.1.20 --role primary"
+    echo "Example for primary: $0 --node-name node1 --node-ip 192.168.1.10 --peer-name node2 --peer-ip 192.168.1.20 --role primary"
     echo "Example for replica: $0 --node-name node2 --node-ip 192.168.1.20 --peer-name node1 --peer-ip 192.168.1.10 --role replica"
     exit 1
 }
@@ -66,7 +66,7 @@ systemctl enable --now etcd
 
 #Change Postgres password to match configs
 sudo -u postgres psql  -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '${POSTGRES_REPLICATOR_PASSWORD}';"
-sudo -u postgres psql  -c "ALTER USER user_name WITH PASSWORD '${POSTGRES_POSTGRES_PASSWORD}';"
+sudo -u postgres psql  -c "ALTER USER postgres WITH PASSWORD '${POSTGRES_POSTGRES_PASSWORD}';"
 
 
 #Disable postgres, let Patroni handle this
@@ -76,7 +76,7 @@ sudo systemctl disable postgresql
 cat <<EOF > $PATRONI_CONFIG
 scope: postgres
 namespace: /db/
-name: ${NODE_IP}
+name: ${NODE_NAME}
 
 restapi:
   listen: 0.0.0.0:8008

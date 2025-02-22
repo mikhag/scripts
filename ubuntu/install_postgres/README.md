@@ -87,3 +87,23 @@ PORTS
 6432 - pgbouncer
 8008 - Patroni cluster status
 8404 - HAproxy statusweb
+
+
+
+patronictl -c /etc/patroni/config.yml list
+patronictl -c /etc/patroni/config.yml switchover
+
+journalctl --no-pager --lines=50
+
+etcdctl member list
+
+./setup_postgres_cluster.sh --node-name node1 --node-ip 10.20.110.111 --peer-name node2 --peer-ip 10.20.110.112 --role primary
+
+
+./setup_postgres_cluster.sh --node-name node2 --node-ip 10.20.110.112 --peer-name node1 --peer-ip 10.20.110.111 --role replica
+
+
+
+apt update; apt install -y git-core;
+git clone https://github.com/mikhag/scripts
+
