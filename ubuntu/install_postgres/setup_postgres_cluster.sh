@@ -128,7 +128,7 @@ sudo -u postgres psql  -c "ALTER USER user_name WITH PASSWORD '${POSTGRES_POSTGR
 if [ ! -f "${PG_DATA_DIR}/postgresql.conf" ]; then
   touch "${PG_DATA_DIR}/postgresql.conf"
 fi
-s
+
 #Add pg_hba.conf
 cat <<EOF > "${PG_DATA_DIR}/pg_hba.conf"
 host    replication     replicator     ${PEER_IP}/32         md5
