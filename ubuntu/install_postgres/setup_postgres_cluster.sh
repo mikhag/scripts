@@ -64,6 +64,11 @@ EOF
 
 systemctl enable --now etcd
 
+#Change Postgres password to match configs
+sudo -u postgres psql  -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '${POSTGRES_REPLICATOR_PASSWORD}';"
+sudo -u postgres psql  -c "ALTER USER user_name WITH PASSWORD '${POSTGRES_POSTGRES_PASSWORD}';"
+
+
 #Disable postgres, let Patroni handle this
 sudo systemctl disable postgresql
 
@@ -120,9 +125,6 @@ echo "${PEER_IP}\t ${PEER_NAME}">> /etc/hosts
 
 if [ "${ROLE}" == "primary" ]; then
 
-#Change Postgres password to match configs
-sudo -u postgres psql  -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '${POSTGRES_REPLICATOR_PASSWORD}';"
-sudo -u postgres psql  -c "ALTER USER user_name WITH PASSWORD '${POSTGRES_POSTGRES_PASSWORD};;"
 
 # Create a placeholder for postgresconfig if missing
 if [ ! -f "${PG_DATA_DIR}/postgresql.conf" ]; then
