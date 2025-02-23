@@ -133,22 +133,22 @@ patronictl -c /etc/patroni/config.yml list
 patronictl -c /etc/patroni/config.yml switchover
 ```
 
-1. Verify that the Leader has been changed
+3. Verify that the Leader has been changed
 ```
 patronictl -c /etc/patroni/config.yml list
 ```
 
-1. Do the upgrade
+4. Do the upgrade
 ```
 apt update; apt upgrade
 ```
 
-1. Reboot
+5. Reboot
 ```
 reboot
 ```
 
-1. Verify that all services has started correctly
+6. Verify that all services has started correctly
 ```
 systemctl status etcd
 
@@ -157,12 +157,12 @@ systemctl status patroni
 systemctl status haproxy
 ```
 
-1. Verify that the host has rejoined the cluster and is streaming
+7. Verify that the host has rejoined the cluster and is streaming
 ```
 patronictl -c /etc/patroni/config.yml list
 ```
 
-2. (optional) Retake the role as leader 
+8. (optional) Retake the role as leader 
 ```
 patronictl -c /etc/patroni/config.yml switchover
 ```
