@@ -56,25 +56,6 @@
 
 ## Op-guides
 
-### Status
-
-✅ High Availability (✔ Patroni, HAProxy, Failover)
-
-✅ Automatic Failover (✔ etcd + Patroni Leader Election)
-
-✅ Scalability (✔ HAProxy Load Balancing, Read Replicas)
-
-✅ No Single Point of Failure (✔ No VIP, External LB Used)
-
-✅ Backup to local filesystem on both primary and replica
-
-⚠ Missing: Replication Lag Protection (Add HAProxy checks)
-
-⚠ Missing: Monitoring (Add Prometheus & Grafana)
-
-⚠ Missing: Security (Enable SSL/TLS)
-
-
 
 ### Ports
 | Port | Description |
@@ -92,10 +73,16 @@
 1. Clone the git Repo
 
 
-2. Enter the folder and run the following command
+2. Start by hardening os
 ```
+apt install python3-venv
+python3 -m venv venv
+source venv/bin/activate
+pip3 install ansible-core
 # This will apply some basic CIS-hardening
 ansible-playbook -e ansible_user=root ./cis-playbook.yml
+deactivate
+rm -rf ./venv
 ```
 
 3. Open setup_postgres_cluster.sh and adjust the password and token at the top of the files (must match on both the primary and replica)
@@ -133,8 +120,69 @@ patronictl -c /etc/patroni/config.yml list
 +---------------+--------------------+---------+-----------+----+-----------+
 ```
 
+### Update of OS
+
+1. Verify if the host is the leader
+```
+patronictl -c /etc/patroni/config.yml list
+```
+
+
+2. If it is the leader do a manual switchover
+```
+patronictl -c /etc/patroni/config.yml switchover
+```
+
+1. Verify that the Leader has been changed
+```
+patronictl -c /etc/patroni/config.yml list
+```
+
+1. Do the upgrade
+```
+apt update; apt upgrade
+```
+
+1. Reboot
+```
+reboot
+```
+
+1. Verify that all services has started correctly
+```
+systemctl status etcd
+
+systemctl status patroni
+
+systemctl status haproxy
+```
+
+1. Verify that the host has rejoined the cluster and is streaming
+```
+patronictl -c /etc/patroni/config.yml list
+```
+
+2. (optional) Retake the role as leader 
+```
+patronictl -c /etc/patroni/config.yml switchover
+```
+
 
 ### Troubleshooting
+
+Test SQL
+```
+psql -h 10.20.110.112 -p 5432 -U postgres -W
+postgres=# CREATE TABLE test_table (id SERIAL PRIMARY KEY, name TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW() );
+
+postgres=# INSERT INTO test_table (name) VALUES ('Alice'), ('Bob'), ('Charlie');
+
+postgres=# SELECT * FROM test_table;
+
+postgres=# DROP TABLE test_table;
+
+```
+
 ```
 #List all nodes with status in patroni
 patronictl -c /etc/patroni/config.yml list
@@ -152,4 +200,18 @@ patronictl -c /etc/patroni/config.yml switchover
 patronictl -c /etc/patroni/config.yml reinit postgres nodeX
 ```
 
+```
+#clear etcd data, stop etcd on all hosts then run command, and start up etcd on primary, before replica
+rm -rf /var/lib/etcd/*
+```
+
+
 * Problems that postgresql replication and superuser password doesn't match in patroni, which makes Patroni not being able to start or handle the cluster
+
+### FIXME
+* Better hardening-scripts
+* Add another node to prevent split-brain scenarios
+* Add monitoring capabilites
+* SSL/TLS for etcd
+* SSL/TLS for postgres and HAproxy
+* Switch bash-script for automation (like ansible/puppet)

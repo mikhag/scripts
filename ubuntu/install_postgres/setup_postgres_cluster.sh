@@ -157,6 +157,9 @@ elif [ "${ROLE}" == "replica" ]; then
   rm -rf "${PG_DATA_DIR}/*"
 fi
 
+#Make sure all config files is owned by postgres
+chown postgres:postgres "${PG_DATA_DIR}/*.conf"
+
 systemctl enable --now patroni
 
 # Configure HAProxy
@@ -216,6 +219,9 @@ systemctl enable haproxy
 # Lets create backupscripts
 #
 mkdir -p /tekniska/bin
+chmod 751 /tekniska
+chmod 751 /tekniska/bin
+
 cat <<EOF > /tekniska/bin/pg_backup.sh
 #!/bin/bash
 
@@ -248,8 +254,11 @@ fi
 
 EOF
 
-chmod 555 /tekniska/bin/pg_backup.sh
+chown postgres:postgres /tekniska/bin/pg_backup.sh
+chmod 550 /tekniska/bin/pg_backup.sh
+
 mkdir -p /tekniska/backup/postgres
+chmod 751 /tekniska/backup
 chown postgres:postgres /tekniska/backup/postgres
 chmod 770 /tekniska/backup/postgres
 
