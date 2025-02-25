@@ -32,41 +32,44 @@
 ```
 ## Functions
 
-### Postgresql
-
+### Postgresql-HA
+A high availability PostgreSQL that can handle single node failure without loss of service. 
 
 
 ## Components
 
-- An external loadbalancer is used to receive the requests and forward it to one of the available nodes in the cluster. 
+### External loadbalancer
+An external loadbalancer is used to receive the requests and forward it to one of the available nodes in the cluster. 
 
 ### HAProxy
-
-- On each node of the cluster an HA-Proxy is installed, this monitors which server that is the master and forwards all operations to it. A readonly port is available aswell, that do not require operations on the master.
+On each node of the cluster an HA-Proxy is installed, this monitors which server that is the master and forwards all operations to it. A readonly port is available aswell, that do not require operations on the master.
 
 ### ETCD
+etcd is a distributed key-value store used for high availability and service coordination. It ensures consensus and leader election in Patroni-managed PostgreSQL clusters. etcd stores cluster state, ensures automatic failover, and enables synchronization across nodes using the Raft consensus algorithm for strong consistency and fault tolerance.
 
 ### Patroni
-- A postgres is installed with Patroni. Patroni monitors and automaticlly switch the master and replica if the master becomes unavailable.
-
+Patroni is a high-availability solution for PostgreSQL that automates failover, leader election, and replication management. It uses distributed consensus with etcd, to track cluster state, ensuring only one primary node exists. Patroni dynamically manages replicas, recovery, and reconfiguration, making PostgreSQL clusters resilient and self-healing.
 
 ### PostgreSQL
+PostgreSQL is an open-source relational database management system known for reliability, extensibility, and SQL compliance. It supports ACID transactions, advanced indexing, replication, and high availability for scalable and secure data storage and management.
 
 ### UFW
+UFW, the Uncomplicated Firewall, simplifies managing iptables rules on Ubuntu systems. It offers a user-friendly command-line interface to allow or block incoming and outgoing network traffic, effectively enhancing system security.
+
 
 ## Op-guides
 
 
 ### Ports
-| Port | Description |
-| --- | --- |
-| 2379 | etcd status |
-| 2380 | etcd communication |
-| 5442 | Postgressql |
-| 5432 | HAproxy postgres-proxy RW |
-| 5433 | HAproxy postgres-proxy RO |
-| 8008 | Patroni cluster status |
-| 8404 | HAproxy statusweb |
+| Port | Description | Firewall |
+| --- | --- | --- |
+| 2379 | etcd status | Only accessible from the other node | 
+| 2380 | etcd communication | Only accessible from the other node | 
+| 5432 | HAproxy postgres-proxy RW | World accessable, Read and Write |
+| 5433 | HAproxy postgres-proxy RO | World accessable, Readonly |
+| 5442 | Postgressql | Only accessable locally (consumed through HAproxy) |
+| 8008 | Patroni cluster status | Only accessible from the other node |
+| 8404 | HAproxy statusweb | World accessable (password-protected) | 
 
 ### Installation guide
 
@@ -115,10 +118,52 @@ patronictl -c /etc/patroni/config.yml list
 + Cluster: postgres (7474342875221584979) -----+-----------+----+-----------+
 | Member        | Host               | Role    | State     | TL | Lag in MB |
 +---------------+--------------------+---------+-----------+----+-----------+
-| 10.20.110.111 | 10.20.110.111:5442 | Replica | streaming |  3 |         0 |
+| node1         | 10.20.110.111:5442 | Replica | streaming |  3 |         0 |
 | node2         | 10.20.110.112:5442 | Leader  | running   |  3 |           |
 +---------------+--------------------+---------+-----------+----+-----------+
 ```
+
+8. If having troubles with the cluster not getting to correct status, you may have to rejoin the cluster in the correct order.
+
+```
+# On node 1 - Stop services
+root@node1# systemctl stop patroni
+root@node1# systemctl stop etcd
+root@node1# systemctl stop haproxy
+
+# On node 2 - Stop services
+root@node2# systemctl stop patroni
+root@node2# systemctl stop etcd
+root@node2# systemctl stop haproxy
+
+# On node1 and node2 - remove etcd database
+root@node1# rm -rf /var/lib/etcd/*
+root@node2# rm -rf /var/lib/etcd/*
+
+# On node1 start etcd (will hang until node2 is started)
+root@node1# systemctl start etcd
+# On node2 start etcd (must be a couple of sec after node1)
+root@node2# systemctl start etcd
+
+# On node1 - Start the remaining service
+root@node1# systemctl start patroni
+root@node1# systemctl start haproxy
+
+# On node2 - Start the remaining service
+root@node2# systemctl start patroni
+root@node2# systemctl start haproxy
+
+#Check status
+root@node1# patronictl -c /etc/patroni/config.yml list
++ Cluster: postgres (7474342875221584979) -----+-----------+----+-----------+
+| Member        | Host               | Role    | State     | TL | Lag in MB |
++---------------+--------------------+---------+-----------+----+-----------+
+| node1         | 10.20.110.111:5442 | Replica | streaming |  3 |         0 |
+| node2         | 10.20.110.112:5442 | Leader  | running   |  3 |           |
++---------------+--------------------+---------+-----------+----+-----------+
+```
+
+
 
 ### Update of OS
 
@@ -167,7 +212,21 @@ patronictl -c /etc/patroni/config.yml list
 patronictl -c /etc/patroni/config.yml switchover
 ```
 
+### Create a new database
+```
+#Connect to the databse
+#Option1: Through the master-node
+sudo -u postgres psql  -p 5442
+#Option2: Through any host
+psql -h <loadbalancer-ip> -p 5432 -U postgres -W
+#Create a database
+postgres=# CREATE DATABASE mydatabase;
+#Create a user
+postgres=# CREATE USER myuser WITH ENCRYPTED PASSWORD 'MySecurePassword';
+#Grant all privileges to the database for the user
+postgres=# GRANT ALL PRIVILEGES ON DATABASE mydatabase TO myuser;
 
+```
 ### Troubleshooting
 
 Test SQL

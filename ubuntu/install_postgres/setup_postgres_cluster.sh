@@ -44,13 +44,13 @@ if [[ "$ROLE" != "primary" && "$ROLE" != "replica" ]]; then
 fi
 
 # Install required packages
-apt update && apt install -y postgresql-${PG_VERSION} etcd-server etcd-client patroni haproxy  jq
+apt update && apt install -y postgresql-${PG_VERSION} etcd-server etcd-client patroni haproxy  jq ufw
 
 
 # Configure etcd
 mkdir -p /etc/etcd
 cat <<EOF > /etc/default/etcd
-ETCD_NAME="${NODE_NAME}"
+ETCD_NAME="${HOSTNAME}"
 ETCD_DATA_DIR="/var/lib/etcd"
 ETCD_INITIAL_CLUSTER_STATE="new"
 ETCD_INITIAL_CLUSTER_TOKEN="${ETCD_CLUSTER_TOKEN}"
