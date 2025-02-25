@@ -1,0 +1,18 @@
+- name: Enable UFW and allow necessary ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  with_items:
+    - "2379"  # etcd client
+    - "2380"  # etcd peer
+    - "5432"  # PostgreSQL write
+    - "5433"  # PostgreSQL read
+    - "5442"  # Patroni PostgreSQL port
+    - "8008"  # Patroni API
+    - "8404"  # HAProxy stats UI
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+

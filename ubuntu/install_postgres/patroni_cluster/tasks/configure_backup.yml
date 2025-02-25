@@ -1,0 +1,24 @@
+- name: Create backup directories
+  file:
+    path: /tekniska/backup/postgres
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0770'
+
+- name: Deploy PostgreSQL backup script
+  template:
+    src: pg_backup.sh.j2
+    dest: /tekniska/bin/pg_backup.sh
+    owner: postgres
+    group: postgres
+    mode: '0750'
+
+- name: Schedule backups with cron
+  cron:
+    name: "PostgreSQL backup"
+    user: postgres
+    job: "/tekniska/bin/pg_backup.sh"
+    minute: "0"
+    hour: "*"
+

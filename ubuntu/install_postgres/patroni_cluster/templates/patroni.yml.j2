@@ -1,0 +1,34 @@
+scope: postgres
+namespace: /db/
+name: {{ inventory_hostname }}
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: {{ ansible_host }}:8008
+
+etcd:
+  hosts: {{ ansible_host }}:2379,{{ peer_ip }}:2379
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5442
+  connect_address: {{ ansible_host }}:5442
+  data_dir: {{ pg_data_dir }}
+  bin_dir: /usr/lib/postgresql/{{ pg_version }}/bin
+  authentication:
+    superuser:
+      username: postgres
+      password: "{{ postgres_postgres_password }}"
+    replication:
+      username: replicator
+      password: "{{ postgres_replicator_password }}"
+

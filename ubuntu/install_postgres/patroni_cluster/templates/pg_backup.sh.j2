@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Configuration
+PG_PORT=5442
+PG_USER="postgres"
+BACKUP_DIR="/tekniska/backup/postgres"
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+
+# Create directories if they don't exist
+mkdir -p "$BACKUP_DIR/hourly" "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly"
+
+# Dump all databases
+pg_dumpall -U "$PG_USER" -p "$PG_PORT" | gzip > "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz"
+
+# Rotate Backups
+find "$BACKUP_DIR/hourly" -type f -mtime +1 -delete  # Keep last 24 hours
+find "$BACKUP_DIR/daily" -type f -mtime +7 -delete   # Keep last 7 days
+find "$BACKUP_DIR/weekly" -type f -mtime +28 -delete # Keep last 4 weeks
+
+# Move to daily if it's midnight
+if [ "$(date +%H)" -eq "00" ]; then
+    cp "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz" "$BACKUP_DIR/daily/"
+fi
+
+# Move to weekly if it's Sunday at midnight
+if [ "$(date +%u)" -eq "7" ] && [ "$(date +%H)" -eq "00" ]; then
+    cp "$BACKUP_DIR/hourly/postgres_backup_$DATE.sql.gz" "$BACKUP_DIR/weekly/"
+fi
+

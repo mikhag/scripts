@@ -1,0 +1,18 @@
+all:
+  hosts:
+    node1:
+      ansible_host: 192.168.1.10
+      role: primary
+      peer_ip: 192.168.1.20
+      peer_name: node2
+    node2:
+      ansible_host: 192.168.1.20
+      role: replica
+      peer_ip: 192.168.1.10
+      peer_name: node1
+  vars:
+    pg_version: 16
+    etcd_cluster_token: "cewcewc3232rREWCrfe%%12"
+    postgres_postgres_password: "SuperSecret"
+    postgres_replicator_password: "ReplicatorSecret"
+

@@ -1,0 +1,6 @@
+- name: Deploy Patroni Cluster
+  hosts: all
+  become: yes
+  roles:
+    - patroni_cluster
+

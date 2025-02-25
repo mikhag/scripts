@@ -1,0 +1,9 @@
+# Allow replication connections from the peer node
+host    replication     replicator     {{ peer_ip }}/32         md5
+host    replication     replicator     {{ ansible_host }}/32     md5
+
+# Local connections
+local   all             postgres                              peer
+host    all             all         127.0.0.1/32            md5
+host    all             all         0.0.0.0/0               md5
+

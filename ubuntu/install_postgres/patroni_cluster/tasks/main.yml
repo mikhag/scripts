@@ -1,0 +1,7 @@
+- import_tasks: install.yml
+- import_tasks: configure_etcd.yml
+- import_tasks: configure_patroni.yml
+- import_tasks: configure_haproxy.yml
+- import_tasks: configure_firewall.yml
+- import_tasks: configure_backup.yml
+
