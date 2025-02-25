@@ -2,7 +2,6 @@
   template:
     src: etcd.conf.j2
     dest: /etc/default/etcd
-  notify: Restart etcd
 
 - name: Enable and start etcd
   systemd:
@@ -10,9 +9,5 @@
     enabled: yes
     state: started
 
-- name: Restart etcd
-  systemd:
-    name: etcd
-    state: restarted
 
 
