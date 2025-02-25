@@ -1,0 +1,37 @@
+- name: Ensure PostgreSQL base config is only deployed on the primary
+  when: role == "primary"
+  
+  block:
+
+    - name: Ensure PostgreSQL data directory exists
+      file:
+        path: "{{ pg_data_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
+    - name: Create an empty PostgreSQL base configuration if missing
+      copy:
+        content: ""
+        dest: "{{ pg_data_dir }}/postgresql.conf"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+        force: no  # Do not overwrite if it already exists
+
+    - name: Deploy `pg_hba.conf` for primary
+      template:
+        src: pg_hba.conf.j2
+        dest: "{{ pg_data_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+      notify: Restart patroni
+
+
+- name: Disable postgres
+  systemd:
+    name: postgresql
+    enabled: false
+    masked: no
