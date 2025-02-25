@@ -7,7 +7,6 @@
   systemd:
     name: etcd
     enabled: yes
-    state: started
 
 
 
