@@ -6,6 +6,31 @@
     group: postgres
     mode: '0770'
 
+- name: Create a folder
+  file:
+    path: /tekniska/backup
+    state: directory
+    owner: root
+    group: root
+    mode: '0711'
+
+- name: Create a folder
+  file:
+    path: /tekniska/bin
+    state: directory
+    owner: root
+    group: root
+    mode: '0711'
+
+- name: Create a folder
+  file:
+    path: /tekniska
+    state: directory
+    owner: root
+    group: root
+    mode: '0711'
+
+
 - name: Deploy PostgreSQL backup script
   template:
     src: pg_backup.sh.j2

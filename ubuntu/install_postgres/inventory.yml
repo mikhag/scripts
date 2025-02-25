@@ -15,5 +15,5 @@ all:
     postgres_postgres_password: "SuperSecret"
     postgres_replicator_password: "ReplicatorSecret"
     pg_version: 16
-    pg_data_dir="/var/lib/postgresql/{{pg_version}}/main"
+    pg_data_dir: "/var/lib/postgresql/{{pg_version}}/main"
 
