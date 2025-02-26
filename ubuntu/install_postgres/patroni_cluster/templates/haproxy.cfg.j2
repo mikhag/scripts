@@ -1,0 +1,43 @@
+global
+    log stdout format raw
+    maxconn 4096
+
+defaults
+    log global
+    mode tcp
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+# Route write queries (Port 5432) only to the leader
+frontend postgresql_write
+    bind *:5432
+    default_backend postgresql_master
+
+backend postgresql_master
+    balance roundrobin
+    option httpchk GET /master
+    http-check expect status 200
+    server {{ inventory_hostname }} {{ ansible_host }}:5442 check port 8008 rise 2 fall 3
+    server {{ peer_name }} {{ peer_ip }}:5442 check port 8008 rise 2 fall 3 backup
+
+# Route read queries (Port 5433) to all replicas
+frontend postgresql_read
+    bind *:5433
+    default_backend postgresql_replicas
+
+backend postgresql_replicas
+    balance leastconn
+    option httpchk GET /replica
+    http-check expect status 200
+    server {{ inventory_hostname }} {{ ansible_host }}:5442 check port 8008 rise 2 fall 3
+    server {{ peer_name }} {{ peer_ip }}:5442 check port 8008 rise 2 fall 3
+
+frontend stats
+    bind *:8404
+    mode http
+    stats enable
+    stats uri /
+    stats refresh 10s
+    stats auth admin:SuperSecretPass
+

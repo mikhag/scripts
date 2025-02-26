@@ -145,6 +145,9 @@ root@node1# systemctl start etcd
 # On node2 start etcd (must be a couple of sec after node1)
 root@node2# systemctl start etcd
 
+# On node2 remove current postgres-db (Warning destructive action, make sure no data is present in DB!)
+root@node2# rm -rf /var/lib/postgresql/16/main/*
+
 # On node1 - Start the remaining service
 root@node1# systemctl start patroni
 root@node1# systemctl start haproxy

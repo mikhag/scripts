@@ -1,0 +1,73 @@
+- name: Ensure PostgreSQL base config is only deployed on the primary
+  when: role == "primary"
+  
+  block:
+
+    - name: Ensure PostgreSQL data directory exists
+      file:
+        path: "{{ pg_data_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
+    - name: Create an empty PostgreSQL base configuration if missing
+      copy:
+        content: ""
+        dest: "{{ pg_data_dir }}/postgresql.conf"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+        force: no  # Do not overwrite if it already exists
+
+    - name: Deploy `pg_hba.conf` for primary
+      template:
+        src: pg_hba.conf.j2
+        dest: "{{ pg_data_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+      notify: Restart patroni
+
+    - name: Create replicator user for postgres
+      become: yes
+      become_user: postgres
+      command: psql -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '{{postgres_replicator_password}}'"
+
+    - name: Update auth-information for postgres
+      become: yes
+      become_user: postgres
+      command: psql -c "ALTER USER postgres WITH PASSWORD '{{postgres_postgres_password}}'"
+
+
+- name: Check if `pg_hba.conf` exists
+  stat:
+    path: "{{ pg_data_dir }}/pg_hba.conf"
+  register: pg_hba_conf_exists
+
+- name: Remove all contents of PostgreSQL data directory (except the directory itself) on replicas if `pg_hba.conf` is missing
+  file:
+    path: "{{ pg_data_dir }}"
+    state: absent
+  when:
+    - role == "replica"
+    - not pg_hba_conf_exists.stat.exists
+
+- name: Recreate PostgreSQL data directory
+  file:
+    path: "{{ pg_data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+  when:
+    - role == "replica"
+    - not pg_hba_conf_exists.stat.exists
+
+
+
+- name: Disable postgres
+  systemd:
+    name: postgresql
+    enabled: false
+    masked: no
