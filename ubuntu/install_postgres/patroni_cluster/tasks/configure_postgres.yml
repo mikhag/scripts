@@ -29,16 +29,15 @@
         mode: '0644'
       notify: Restart patroni
 
-    - name: Update auth-information for postgres
-      hosts: localhost
+    - name: Create replicator user for postgres
       become: yes
       become_user: postgres
-      tasks:
-        - name: Create replicator user
-          command: psql -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '{{postgres_replicator_password}}'"
-        - name: Update postgres password
-          command: psql -c "ALTER USER postgres WITH PASSWORD '{{postgres_postgres_password}}'"
+      command: psql -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '{{postgres_replicator_password}}'"
 
+    - name: Update auth-information for postgres
+      become: yes
+      become_user: postgres
+      command: psql -c "ALTER USER postgres WITH PASSWORD '{{postgres_postgres_password}}'"
 
 
 - name: Check if `pg_hba.conf` exists
