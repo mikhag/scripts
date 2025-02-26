@@ -67,7 +67,7 @@ UFW, the Uncomplicated Firewall, simplifies managing iptables rules on Ubuntu sy
 | 2380 | etcd communication | Only accessible from the other node | 
 | 5432 | HAproxy postgres-proxy RW | World accessable, Read and Write |
 | 5433 | HAproxy postgres-proxy RO | World accessable, Readonly |
-| 5442 | Postgressql | Only accessable locally (consumed through HAproxy) |
+| 5442 | Postgressql | Only accessible from the other node |
 | 8008 | Patroni cluster status | Only accessible from the other node |
 | 8404 | HAproxy statusweb | World accessable (password-protected) | 
 
@@ -88,17 +88,14 @@ deactivate
 rm -rf ./venv
 ```
 
-3. Open setup_postgres_cluster.sh and adjust the password and token at the top of the files (must match on both the primary and replica)
+3. Open inventory.yml and edit host information and passwords used in this instance
 
 4. Run the following command on the primary and replica nodes
 ```
-# Run this on the Primary node
-./setup_postgres_cluster.sh --node-name node1 --node-ip 10.20.110.111 --peer-name node2 --peer-ip 10.20.110.112 --role primary
-```
-
-```
-# Run this on the Replica node
-./setup_postgres_cluster.sh --node-name node2 --node-ip 10.20.110.112 --peer-name node1 --peer-ip 10.20.110.111 --role replica
+ansible-playbook -i inventory.yml ./deploy_patroni.yml
+# Tip: if you want to run the playbook locally instead of using ssh, make sure 
+# only the current host exits in inventory.yml, and add "connection: 
+# local" on a row after "become: yes"
 ```
 
 5. Reboot the servers
@@ -267,6 +264,10 @@ patronictl -c /etc/patroni/config.yml reinit postgres nodeX
 rm -rf /var/lib/etcd/*
 ```
 
+```
+#Check HAproxy status
+watch 'echo "show stat" | sudo nc -U /var/run/haproxy.sock | cut -d "," -f 1,2,8-10,18 | column -s, -t'
+```
 
 * Problems that postgresql replication and superuser password doesn't match in patroni, which makes Patroni not being able to start or handle the cluster
 

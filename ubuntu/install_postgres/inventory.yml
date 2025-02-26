@@ -14,6 +14,7 @@ all:
     etcd_cluster_token: "cewcewc3232rREWCrfe%%12"
     postgres_postgres_password: "SuperSecret"
     postgres_replicator_password: "ReplicatorSecret"
+    haproxy_stat_password: "fdsceWCc32cfsdcds"
     pg_version: 16
     pg_data_dir: "/var/lib/postgresql/{{pg_version}}/main"
 
