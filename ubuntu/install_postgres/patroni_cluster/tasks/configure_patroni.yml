@@ -2,7 +2,6 @@
   template:
     src: patroni.yml.j2
     dest: /etc/patroni/config.yml
-  notify: Restart patroni
 
 - name: Enable and start Patroni
   systemd:
