@@ -17,6 +17,8 @@
       # -------------------------
       cis_ubuntu2404_rule_1_1_1_7: false # squashfs - IMPACT: Snap packages utilizes squashfs as a compressed filesystem, disabling squashfs will cause Snap packages to fail.
       # -------------------------
+      cis_ubuntu2404_ssh_authentication_methods: "publickey password"
+      cis_ubuntu2404_ssh_password_authentication: "yes"
       cis_ubuntu2404_rule_5_1_24: true
       cis_ubuntu2404_rule_5_1_24_ssh_user: "{{ ansible_user }}"
       cis_ubuntu2404_rule_5_1_24_ssh_pub_key: "<ADD_PUB_KEY>"
