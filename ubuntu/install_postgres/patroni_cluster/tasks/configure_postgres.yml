@@ -29,6 +29,43 @@
         mode: '0644'
       notify: Restart patroni
 
+    - name: Update auth-information for postgres
+      hosts: localhost
+      become: yes
+      become_user: postgres
+      tasks:
+        - name: Create replicator user
+          command: psql -c "CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '{{postgres_replicator_password}}'"
+        - name: Update postgres password
+          command: psql -c "ALTER USER postgres WITH PASSWORD '{{postgres_postgres_password}}'"
+
+
+
+- name: Check if `pg_hba.conf` exists
+  stat:
+    path: "{{ pg_data_dir }}/pg_hba.conf"
+  register: pg_hba_conf_exists
+
+- name: Remove all contents of PostgreSQL data directory (except the directory itself) on replicas if `pg_hba.conf` is missing
+  file:
+    path: "{{ pg_data_dir }}"
+    state: absent
+  when:
+    - role == "replica"
+    - not pg_hba_conf_exists.stat.exists
+
+- name: Recreate PostgreSQL data directory
+  file:
+    path: "{{ pg_data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+  when:
+    - role == "replica"
+    - not pg_hba_conf_exists.stat.exists
+
+
 
 - name: Disable postgres
   systemd:
