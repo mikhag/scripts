@@ -277,4 +277,3 @@ watch 'echo "show stat" | sudo nc -U /var/run/haproxy.sock | cut -d "," -f 1,2,8
 * Add monitoring capabilites
 * SSL/TLS for etcd
 * SSL/TLS for postgres and HAproxy
-* Switch bash-script for automation (like ansible/puppet)
