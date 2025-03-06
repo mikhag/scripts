@@ -30,7 +30,6 @@
     group: root
     mode: '0711'
 
-
 - name: Deploy PostgreSQL backup script
   template:
     src: pg_backup.sh.j2
@@ -38,6 +37,12 @@
     owner: postgres
     group: postgres
     mode: '0750'
+
+- name: Add Postgres to cron.allow
+  ansible.builtin.lineinfile:
+   path: /etc/cron.allow
+   line: postgres
+   create: false
 
 - name: Schedule backups with cron
   cron:
