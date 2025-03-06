@@ -81,7 +81,7 @@ UFW, the Uncomplicated Firewall, simplifies managing iptables rules on Ubuntu sy
 apt install python3-venv
 python3 -m venv venv
 source venv/bin/activate
-pip3 install ansible-core
+pip3 install ansible
 # This will apply some basic CIS-hardening
 ansible-playbook -e ansible_user=root ./cis-playbook.yml
 deactivate
