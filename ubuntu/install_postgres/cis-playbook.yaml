@@ -11,7 +11,7 @@
       cis_ubuntu2404_section2: true
       cis_ubuntu2404_section3: true
       cis_ubuntu2404_section4: true
-      cis_ubuntu2404_section5: true
+      cis_ubuntu2404_section5: false # Fixme, lots of conflict with Azure-access-config :(
       cis_ubuntu2404_section6: true
       cis_ubuntu2404_section7: true
       # -------------------------
@@ -34,14 +34,14 @@
       # -------------------------
       cis_ubuntu2404_allow_gdm_gui: false
       cis_ubuntu2404_allow_autofs: false # Disable auto mount, set to true to allow it and not disable
-      cis_ubuntu2404_rule_1_1_1_9: false # Disable USB Storage, set to false to not disable
+      cis_ubuntu2404_rule_1_1_1_9: true # Disable USB Storage, set to false to not disable
       cis_ubuntu2404_time_synchronization_service: chrony # chrony | systemd-timesyncd
       cis_ubuntu2404_time_synchronization_time_server:
         - uri: time.cloudflare.com
           config: iburst
         - uri: ntp.ubuntu.com
           config: iburst
-      cis_ubuntu2404_allow_cups: true
+      cis_ubuntu2404_allow_cups: false
       # -------------------------
       cis_ubuntu2404_install_aide: false
       cis_ubuntu2404_config_aide: false

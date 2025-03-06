@@ -1,5 +1,5 @@
 - name: Install timescaledb
-  when: timescaledb == true
+  when: timescaledb == true and role == "primary"
   
   block:
     - name: Get apt-key for timescaledb
@@ -16,7 +16,7 @@
     - name: Add timescale gpg
       become: true
       become_user: root
-      shell: "cat /tmp/timescaledb.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/timescaledb.gpg"
+      shell: "cat /tmp/timescaledb.gpg | gpg --batch --yes --dearmor -o /etc/apt/trusted.gpg.d/timescaledb.gpg"
 
     - name: Add repo for timescaledb
       ansible.builtin.apt_repository:
@@ -26,7 +26,9 @@
 
     - name: Update repositories cache and install timescale-packages
       ansible.builtin.apt:
-        name: timescaledb-2-postgresql-{{ pg_version }} postgresql-client-{{ pg_version }}
+        name: 
+          - timescaledb-2-postgresql-{{ pg_version }} 
+          - postgresql-client-{{ pg_version }}
         update_cache: true
 
 
