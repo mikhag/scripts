@@ -88,19 +88,30 @@ deactivate
 rm -rf ./venv
 ```
 
-3. Open inventory.yml and edit host information and passwords used in this instance
+3. Format and mount the unused disk, **WARNING: DESTRUCTIVE AND BASED ON GUESSWORK, DO NOT RUN WHEN PROD-DATA IS PRESENT**
+```
 
-4. Run the following command on the primary and replica nodes
+# Appends mounted disk to list of appended disk, sorts and count. The one occuring only once is not mounted, and I **assume** that one should be formated
+disk=$(((ls -1 /dev/sd[a-z]);(mount | grep -o "/dev/sd[a-z]" | sort | uniq)) | sort | uniq -c  | grep -e " 1 /dev/sd" | awk  '{print $2}')
+mkfs.ext4 $disk
+diskuuid=$(blkid -s UUID -o value $disk)
+
+echo "UUID=$diskuuid /var/lib/postgres ext4  defaults 0 0" >> /etc/fstab; mkdir /var/lib/postgres; mount -a
+
+```
+
+4. Open inventory.yml and edit host information and passwords used in this instance
+
+5. Run the following command on the primary and replica nodes
 ```
 ansible-playbook -i inventory.yml ./deploy_patroni.yml
-# Tip: if you want to run the playbook locally instead of using ssh, make sure 
-# only the current host exits in inventory.yml, and add "connection: 
-# local" on a row after "become: yes"
+#If you run local without SSH, configure variables in command-line
+ansible-playbook -e '{"ansible_hostname":"node2", "ansible_host":"10.20.110.112", "role":"replica", "peer_ip":"10.20.110.111", "peer_name":"node1"}'  -i inventory_localhost.yml deploy_patroni_localhost.yml 
 ```
 
-5. Reboot the servers
+6. Reboot the servers
 
-6. verify that all services started correctly
+7. verify that all services started correctly
 ```
 systemctl status etcd
 
@@ -109,7 +120,7 @@ systemctl status patroni
 systemctl status haproxy
 ```
 
-7. Check Patroni status
+8. Check Patroni status
 ```
 patronictl -c /etc/patroni/config.yml list
 + Cluster: postgres (7474342875221584979) -----+-----------+----+-----------+
@@ -120,7 +131,7 @@ patronictl -c /etc/patroni/config.yml list
 +---------------+--------------------+---------+-----------+----+-----------+
 ```
 
-8. If having troubles with the cluster not getting to correct status, you may have to rejoin the cluster in the correct order.
+9. If having troubles with the cluster not getting to correct status, you may have to rejoin the cluster in the correct order.
 
 ```
 # On node 1 - Stop services
@@ -280,10 +291,3 @@ watch 'echo "show stat" | sudo nc -U /var/run/haproxy.sock | cut -d "," -f 1,2,8
 * SSL/TLS for postgres and HAproxy
 
 
-
-# Appends mounted disk to list of appended disk, sorts and count. The one occuring only once is not mounted, and I **assume** that one should be formated
-disk=$(((ls -1 /dev/sd[a-z]);(mount | grep -o "/dev/sd[a-z]" | sort | uniq)) | sort | uniq -c  | grep -e " 1 /dev/sd" | awk  '{print $2}')
-mkfs.ext4 $disk
-diskuuid=$(blkid -s UUID -o value $disk)
-
-echo "UUID=$diskuuid /var/lib/postgres ext4  defaults 0 0" >> /etc/fstab; mkdir /var/lib/postgres; mount -a
