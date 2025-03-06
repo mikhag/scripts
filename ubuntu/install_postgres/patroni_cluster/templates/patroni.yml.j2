@@ -1,6 +1,6 @@
 scope: postgres
 namespace: /db/
-name: {{ inventory_hostname }}
+name: {{ ansible_hostname }}
 
 restapi:
   listen: 0.0.0.0:8008
