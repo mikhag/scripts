@@ -30,6 +30,6 @@ echo "UUID=$diskuuid /var/lib/postgres ext4  defaults 0 0" >> /etc/fstab; mkdir 
 if [ $(echo $HOSTNAME | grep -e "1$") ]; then
     ansible-playbook -e "{'ansible_hostname':'${PRIMARY_NAME}', 'ansible_host':'${PRIMARY_IP}', 'role':'primary', 'peer_ip':'${REPLICA_IP}', 'peer_name':'${REPLICA_NAME}'}"  -i inventory_localhost.yml deploy_patroni_localhost.yml 
 else
-    ansible-playbook -e "{'ansible_hostname':'${REPLICA_NAME}', 'ansible_host':'${REPLICA_IP}', 'role':'primary', 'peer_ip':'${PRIMARY_IP}', 'peer_name':'${PRIMARY_NAME}'}"  -i inventory_localhost.yml deploy_patroni_localhost.yml 
+    ansible-playbook -e "{'ansible_hostname':'${REPLICA_NAME}', 'ansible_host':'${REPLICA_IP}', 'role':'replica', 'peer_ip':'${PRIMARY_IP}', 'peer_name':'${PRIMARY_NAME}'}"  -i inventory_localhost.yml deploy_patroni_localhost.yml 
 fi
 
