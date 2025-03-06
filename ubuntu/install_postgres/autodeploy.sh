@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #This script will deploy and 
 
 
