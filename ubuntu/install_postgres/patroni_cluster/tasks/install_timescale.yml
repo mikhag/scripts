@@ -1,0 +1,26 @@
+- name: Install timescaledb
+  when: timescaledb == true
+  
+  block:
+    - name: Get apt-key for timescaledb
+      ansible.builtin.get_url:
+        url: https://packagecloud.io/timescale/timescaledb/gpgkey
+        dest: /etc/apt/trusted.gpg.d/timescaledb.gpg
+        checksum: sha256:582afe7c1ab2d69d630b36c397427cea4847f68487742862319e7a48d57bef50
+
+    - name: Add repo for timescaledb
+      ansible.builtin.apt_repository:
+        repo: "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ {{ ansible_distribution_release }} main"
+        state: present
+
+
+    - name: Update repositories cache and install timescale-packages
+      ansible.builtin.apt:
+        name: timescaledb-2-postgresql-{{ pg_version }} postgresql-client-{{ pg_version }}
+        update_cache: true
+
+
+    - name: Apply timescaledb
+      become: true
+      become_user: root
+      command: "timescaledb-tune -yes"

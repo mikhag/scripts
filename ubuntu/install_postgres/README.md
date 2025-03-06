@@ -143,6 +143,7 @@ root@node1# systemctl start etcd
 root@node2# systemctl start etcd
 
 # On node2 remove current postgres-db (Warning destructive action, make sure no data is present in DB!)
+# !Note! if you remove the postgres folder on the primary node you have to run 'timescaledb-tune'.
 root@node2# rm -rf /var/lib/postgresql/16/main/*
 
 # On node1 - Start the remaining service
@@ -277,3 +278,12 @@ watch 'echo "show stat" | sudo nc -U /var/run/haproxy.sock | cut -d "," -f 1,2,8
 * Add monitoring capabilites
 * SSL/TLS for etcd
 * SSL/TLS for postgres and HAproxy
+
+
+
+# Appends mounted disk to list of appended disk, sorts and count. The one occuring only once is not mounted, and I **assume** that one should be formated
+disk=$(((ls -1 /dev/sd[a-z]);(mount | grep -o "/dev/sd[a-z]" | sort | uniq)) | sort | uniq -c  | grep -e " 1 /dev/sd" | awk  '{print $2}')
+mkfs.ext4 $disk
+diskuuid=$(blkid -s UUID -o value $disk)
+
+echo "UUID=$diskuuid /var/lib/postgres ext4  defaults 0 0" >> /etc/fstab; mkdir /var/lib/postgres; mount -a

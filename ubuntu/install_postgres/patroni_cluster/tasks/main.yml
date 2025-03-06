@@ -1,5 +1,6 @@
 - import_tasks: install.yml
 - import_tasks: configure_postgres.yml
+- import_tasks: install_timescale.yml
 - import_tasks: configure_etcd.yml
 - import_tasks: configure_patroni.yml
 - import_tasks: configure_haproxy.yml
