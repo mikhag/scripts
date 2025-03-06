@@ -27,7 +27,7 @@
         owner: postgres
         group: postgres
         mode: '0644'
-      notify: Restart patroni
+      
 
     - name: Create replicator user for postgres
       become: yes

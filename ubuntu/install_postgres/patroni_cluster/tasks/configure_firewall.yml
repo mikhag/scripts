@@ -7,6 +7,7 @@
     - "5432"  # PostgreSQL write
     - "5433"  # PostgreSQL read
     - "8404"  # HAProxy stats UI
+    - "22"    # Allow SSH
 
 - name: Allow Peer IP to Access Replication, Patroni, and etcd
   ufw:
